@@ -1,51 +1,86 @@
-# Welcome to your Expo app 👋
+# Readify
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A full-stack book recommendation app with a Node/Express + MongoDB API and an Expo/React Native mobile client. Users can sign up, log in, post book recommendations with covers and ratings, browse the community feed, and manage their own posts.
 
-## Get started
+## Features
+- **Mobile (Expo/React Native)**: Email/password auth, onboarding, home feed with infinite scroll + pull-to-refresh, add recommendation with image picker + rating, profile with delete, persistent auth via AsyncStorage, global state with Zustand.
+- **Backend (Express/MongoDB)**: JWT auth, CRUD for books with ownership checks, Cloudinary image uploads, Swagger docs at `/api-docs`, cron keep-alive pings for hosted deployments.
+- **DX**: Typed navigation via Expo Router, theming/stylesheets, linting, and hot reload for both client and server.
 
-1. Install dependencies
+## Tech Stack
+- **Mobile**: Expo Router, React Native 0.81, Expo SDK 54, AsyncStorage, React Navigation, Zustand.
+- **Backend**: Node 20+, Express 5, Mongoose, JWT, Cloudinary, Swagger, Cron.
+- **Infrastructure**: MongoDB Atlas/local, Cloudinary for media.
 
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+## Project Structure
+```
+backend/        # Express API (auth + books, Swagger)
+mobile/         # Expo app (screens, store, assets)
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Prerequisites
+- Node.js 20+ and npm
+- MongoDB URI (local or Atlas)
+- Cloudinary account (for image hosting)
+- Expo CLI (`npm i -g expo-cli`) and platform tooling (Android Studio and/or Xcode for device simulators)
 
-## Learn more
+## Backend Setup (`backend/`)
+1) Install deps
+```bash
+npm install
+```
+2) Create `.env`
+```bash
+PORT=3000
+MONGO_URI=your_mongodb_uri
+JWT_SECRET=super_secret_value
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_key
+CLOUDINARY_API_SECRET=your_secret
+# Used by the cron keep-alive job (point to your deployed API URL)
+API_URL=https://your-api-host.com
+```
+3) Run the API
+```bash
+npm run dev
+```
+- API: http://localhost:3000
+- Docs: http://localhost:3000/api-docs
 
-To learn more about developing your project with Expo, look at the following resources:
+## Mobile Setup (`mobile/`)
+1) Install deps
+```bash
+npm install
+```
+2) Add Expo env (creates `mobile/.env` or use your shell env)
+```bash
+EXPO_PUBLIC_API_URL=http://localhost:3000
+```
+3) Start the app
+```bash
+npm run start           # choose iOS/Android/Web
+npm run ios             # run on iOS simulator
+npm run android         # run on Android emulator
+```
+4) Log in / Sign up from the app. The client reads `EXPO_PUBLIC_API_URL` to call the backend.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Key Flows
+- **Auth**: `/api/auth/register`, `/api/auth/login` return JWT + user profile; tokens are stored in AsyncStorage.
+- **Books**: `/api/books` (POST create, GET paginated feed), `/api/books/user` (GET current user’s books), `/api/books/:id` (DELETE owned book). All book routes require Bearer tokens.
+- **Media**: Images are uploaded to Cloudinary; payloads accept base64 data URLs from the app image picker.
 
-## Join the community
+## Testing the API quickly
+```bash
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"demo","email":"demo@example.com","password":"password123"}'
+```
+Then use the returned `token` as `Authorization: Bearer <token>` on book routes.
 
-Join our community of developers creating universal apps.
+## Development Tips
+- If the Expo app cannot reach the API on device/emulator, replace `localhost` with your LAN IP in `EXPO_PUBLIC_API_URL`.
+- The cron job runs every 14 minutes to ping `API_URL`; set it only when deploying to a host that sleeps on inactivity.
+- Swagger docs mirror the route annotations in `backend/src/routes/*.js` and are useful for contract testing.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
-# bookworm-react-native-app
+## License
+ISC
