@@ -1,12 +1,12 @@
 import { create } from "zustand";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const API_URL = "http://localhost:3000";
-
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 export const useAuthStore = create((set, get) => ({
   user: null,
   token: null,
   isLoading: false,
+  isCheckingAuth: true,
 
   register: async (username, email, password) => {
     set({ isLoading: true });
@@ -69,5 +69,27 @@ export const useAuthStore = create((set, get) => ({
     await AsyncStorage.removeItem("user");
     set({ user: null, token: null });
     console.log("User logged out");
+  },
+  checkAuth: async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      const userStr = await AsyncStorage.getItem("user");
+      if (token && userStr) {
+        const user = JSON.parse(userStr);
+        set({ token, user });
+        console.log("User is authenticated");
+      } else {
+        set({ token: null, user: null });
+        console.log("No authenticated user found");
+      }
+    } catch (error) {
+      console.error("Error checking auth:", error);
+      // Clear corrupted data
+      await AsyncStorage.removeItem("token");
+      await AsyncStorage.removeItem("user");
+      set({ token: null, user: null });
+    } finally {
+      set({ isCheckingAuth: false });
+    }
   },
 }));

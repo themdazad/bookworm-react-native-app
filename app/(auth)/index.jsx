@@ -10,9 +10,9 @@ import {
   Alert,
 } from "react-native";
 import { Link } from "expo-router";
-import styles from "../../assets/styles/login.styles";
 import { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
+import styles from "../../assets/styles/login.styles";
 import COLORS from "../../constants/colors";
 import { useAuthStore } from "../../store/authStore";
 
@@ -21,7 +21,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const { user, login, isLoading, token } = useAuthStore();
+  const { login, isLoading, isCheckingAuth } = useAuthStore();
 
   const handleLogin = async () => {
     const result = await login(email, password);
@@ -32,6 +32,11 @@ export default function Login() {
       // Navigate to the main app screen or wherever appropriate
     }
   };
+
+  if (isCheckingAuth) {
+    return null;
+  }
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -41,7 +46,7 @@ export default function Login() {
         {/* Illustration */}
         <View style={styles.topIllustration}>
           <Image
-            source={require("../../assets/images/illustrations/Reading-glasses-bro.png")}
+            source={require("../../assets/images/illustrations/Woman-reading-bro.png")}
             style={styles.illustrationImage}
             resizeMode="contain"
           />
@@ -125,6 +130,25 @@ export default function Login() {
               </Link>
             </View>
           </View>
+        </View>
+        {/* Developer Credit */}
+        <View
+          style={{
+            color: COLORS.primary,
+            position: "absolute",
+            bottom: 20,
+            left: 0,
+            right: 0,
+            alignItems: "center",
+          }}
+        >
+          <Link href="https://github.com/themdazad" asChild>
+            <TouchableOpacity>
+              <Text style={styles.developerCreditText}>
+                Developed by @themdazad
+              </Text>
+            </TouchableOpacity>
+          </Link>
         </View>
       </View>
     </KeyboardAvoidingView>
